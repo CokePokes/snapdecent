@@ -2,7 +2,7 @@
 //  snapdecent.mm
 //  snapdecent
 //
-//  Created by CokePokes on 2/17/18.
+//  Created by CokePokes on 2/16/18.
 //  Copyright (c) 2018 ___ORGANIZATIONNAME___. All rights reserved.
 //
 
@@ -15,79 +15,61 @@
 
 #import <Foundation/Foundation.h>
 #import "CaptainHook/CaptainHook.h"
-#include <notify.h> // not required; for examples only
 
-// Objective-C runtime hooking using CaptainHook:
-//   1. declare class using CHDeclareClass()
-//   2. load class using CHLoadClass() or CHLoadLateClass() in CHConstructor
-//   3. hook method using CHOptimizedMethod()
-//   4. register hook using CHHook() in CHConstructor
-//   5. (optionally) call old method using CHSuper()
-
-
-@interface snapdecent : NSObject
-
+@interface FBBundleInfo : NSObject
+@property (nonatomic,copy) NSString * displayName;
+@property (nonatomic,copy) NSString * bundleIdentifier;
+@end
+@interface FBApplicationInfo : FBBundleInfo
+@property (nonatomic,retain,readonly) NSDictionary * environmentVariables;
+@property (nonatomic,retain,readonly) NSURL * dataContainerURL;
+-(NSDictionary*)environmentVariables;
+-(NSURL *)dataContainerURL;
+@end
+@interface SBApplication : NSObject
+-(id)bundleContainerPath;
+-(id)initWithApplicationInfo:(id)arg1 ;
+-(id)dataContainerPath;
+@end
+@interface SBApplicationController : NSObject
++(id)_sharedInstanceCreateIfNecessary:(BOOL)arg1 ;
++(id)sharedInstance;
++(id)sharedInstanceIfExists;
+-(id)applicationWithBundleIdentifier:(id)arg1 ;
+-(id)applicationWithDisplayIdentifier:(id)arg1;
 @end
 
-@implementation snapdecent
-
--(id)init
+CHDeclareClass(FBApplicationInfo);
+CHOptimizedMethod0(self, NSDictionary*, FBApplicationInfo, environmentVariables) //probably could find a better method to hook. eh, everything i need is right here rather than using the ever changing SBApplication API.
 {
-	if ((self = [super init]))
-	{
-	}
-
-    return self;
+    NSDictionary *originalEnv = CHSuper0(FBApplicationInfo, environmentVariables);
+    if ([self.displayName isEqualToString:@"Snapchat"] || [self.bundleIdentifier isEqualToString:@"com.toyopagroup.picaboo"]){
+        NSString *path = [NSString stringWithFormat:@"%@/Documents/zero-dep.plist", [self dataContainerURL].path];
+        NSFileManager *fm = [NSFileManager defaultManager];
+        NSError *error = nil;
+        // Get the current permissions
+        NSDictionary *currentPerms = [fm attributesOfFileSystemForPath:path error:&error];
+        if (currentPerms) {
+            // Update the permissions with the new permission
+            NSMutableDictionary *attributes = [currentPerms mutableCopy];
+            //if (attributes[NSFilePosixPermissions]){ needs a better check. Oh whale.
+            attributes[NSFilePosixPermissions] = @(0000);
+            if (![fm setAttributes:attributes ofItemAtPath:path error:&error]) {
+                NSLog(@"Unable to make %@ strict: %@", path, error);
+            }
+            //}
+        } else {
+            NSLog(@"Unable to read permissions for %@: %@", path, error);
+        }
+    }
+    return originalEnv;
 }
 
-@end
-
-
-@class ClassToHook;
-
-CHDeclareClass(ClassToHook); // declare class
-
-CHOptimizedMethod(0, self, void, ClassToHook, messageName) // hook method (with no arguments and no return value)
+CHConstructor
 {
-	// write code here ...
-	
-	CHSuper(0, ClassToHook, messageName); // call old (original) method
-}
-
-CHOptimizedMethod(2, self, BOOL, ClassToHook, arg1, NSString*, value1, arg2, BOOL, value2) // hook method (with 2 arguments and a return value)
-{
-	// write code here ...
-
-	return CHSuper(2, ClassToHook, arg1, value1, arg2, value2); // call old (original) method and return its return value
-}
-
-static void WillEnterForeground(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
-{
-	// not required; for example only
-}
-
-static void ExternallyPostedNotification(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
-{
-	// not required; for example only
-}
-
-CHConstructor // code block that runs immediately upon load
-{
-	@autoreleasepool
-	{
-		// listen for local notification (not required; for example only)
-		CFNotificationCenterRef center = CFNotificationCenterGetLocalCenter();
-		CFNotificationCenterAddObserver(center, NULL, WillEnterForeground, CFSTR("UIApplicationWillEnterForegroundNotification"), NULL, CFNotificationSuspensionBehaviorCoalesce);
-		
-		// listen for system-side notification (not required; for example only)
-		// this would be posted using: notify_post("com.cokepokes.snapdecent.eventname");
-		CFNotificationCenterRef darwin = CFNotificationCenterGetDarwinNotifyCenter();
-		CFNotificationCenterAddObserver(darwin, NULL, ExternallyPostedNotification, CFSTR("com.cokepokes.snapdecent.eventname"), NULL, CFNotificationSuspensionBehaviorCoalesce);
-		
-		// CHLoadClass(ClassToHook); // load class (that is "available now")
-		// CHLoadLateClass(ClassToHook);  // load class (that will be "available later")
-		
-		CHHook(0, ClassToHook, messageName); // register hook
-		CHHook(2, ClassToHook, arg1, arg2); // register hook
-	}
+    @autoreleasepool
+    {
+        CHLoadLateClass(FBApplicationInfo);
+        CHHook0(FBApplicationInfo, environmentVariables);
+    }
 }
