@@ -1,7 +1,7 @@
 Package: com.cokepokes.snapdecent
 Name: snapdecent
 Version: 0.2-2
-Description: 
+Description: Uses a file modification on every Snapchat app launch to revert back to the cool user interface. FOR THE IDIOTS: ENABLES OLD SNAPCHAT LOOK
 Section: Tweaks
 Depends: firmware (>= 8.0), mobilesubstrate
 Conflicts: 

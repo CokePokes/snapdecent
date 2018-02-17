@@ -280,7 +280,7 @@
 					"$(MonkeyDevTheosPath)/vendor/include/**",
 				);
 				INSTALL_PATH = /Library/MobileSubstrate/DynamicLibraries;
-				MonkeyDevBuildPackageOnAnyBuild = NO;
+				MonkeyDevBuildPackageOnAnyBuild = YES;
 				MonkeyDevClearUiCacheOnInstall = NO;
 				MonkeyDevCopyOnBuild = NO;
 				MonkeyDevDeviceIP = "";
@@ -309,7 +309,7 @@
 					"$(MonkeyDevTheosPath)/vendor/include/**",
 				);
 				INSTALL_PATH = /Library/MobileSubstrate/DynamicLibraries;
-				MonkeyDevBuildPackageOnAnyBuild = NO;
+				MonkeyDevBuildPackageOnAnyBuild = YES;
 				MonkeyDevClearUiCacheOnInstall = NO;
 				MonkeyDevCopyOnBuild = NO;
 				MonkeyDevDeviceIP = "";
